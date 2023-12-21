@@ -41,6 +41,9 @@ func main() {
 
 	r.GET("/products", h.GetProducts)
 
+	r.POST("/transactions", AuthMiddleware(h), h.CreateTransaction)
+	r.GET("/transactions/my-transactions", AuthMiddleware(h), h.GetMyTransactions)
+
 	r.Run(":8080")
 }
 
