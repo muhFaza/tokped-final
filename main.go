@@ -16,7 +16,9 @@ func main() {
 
 	r := gin.Default()
 
+	// uses bcrypt for password hashing
 	r.POST("/users/register", h.Register)
+	r.POST("/users/login", h.Login)
 
 	r.Run(":8080")
 }
