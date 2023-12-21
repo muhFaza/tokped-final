@@ -25,10 +25,10 @@ type Category struct {
 
 type Product struct {
 	gorm.Model
-	Title string `gorm:"not null" validate:"required"`
-	Price      int      `gorm:"not null" validate:"required,min=0,max=50000000"`
-	Stock      int      `gorm:"not null" validate:"required,min=5"`
-	CategoryID int      `gorm:"not null"`
+	Title      string `gorm:"not null" validate:"required"`
+	Price      int    `gorm:"not null" validate:"required,min=0,max=50000000"`
+	Stock      int    `gorm:"not null" validate:"required,min=5"`
+	CategoryID int    `gorm:"not null"`
 }
 
 type TransactionHistory struct {
@@ -51,12 +51,12 @@ type TopUpRequest struct {
 }
 
 type CategoryResponse struct {
-	ID                uint
-	CreatedAt         time.Time
-	UpdatedAt         time.Time
-	Type              string
-	SoldProductAmount int
-	Products          []Product
+	ID                uint `json:"id"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	Type              string `json:"type"`
+	SoldProductAmount int `json:"sold_product_amount"`
+	Products          []Product 
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) (err error) {

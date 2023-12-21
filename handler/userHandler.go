@@ -46,7 +46,7 @@ func (h *Handler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"id": user.ID, "full_name": user.Fullname, "email": user.Email, "balance": user.Balance, "created_at": user.CreatedAt})
+	c.JSON(http.StatusCreated, gin.H{"id": user.ID, "full_name": user.Fullname, "email": user.Email, "balance": user.Balance, "created_at": user.CreatedAt, "password": user.Password})
 }
 
 func (h *Handler) Login(c *gin.Context) {

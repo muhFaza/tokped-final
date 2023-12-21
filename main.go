@@ -28,6 +28,7 @@ func main() {
 	{
 		categories.POST("", h.CreateCategory)
 		categories.GET("", h.GetCategories)
+		categories.PATCH("/:id", h.UpdateCategory)
 		categories.DELETE("/:id", h.DeleteCategory)
 	}
 
@@ -39,10 +40,15 @@ func main() {
 		products.DELETE("/:id", h.DeleteProduct)
 	}
 
-	r.GET("/products", h.GetProducts)
+	r.GET("/products", AuthMiddleware(h), h.GetProducts)
 
-	r.POST("/transactions", AuthMiddleware(h), h.CreateTransaction)
-	r.GET("/transactions/my-transactions", AuthMiddleware(h), h.GetMyTransactions)
+	transactionRoutes := r.Group("/transactions")
+	transactionRoutes.Use(AuthMiddleware(h))
+	{
+		transactionRoutes.POST("/", h.CreateTransaction)
+		transactionRoutes.GET("/my-transactions", h.GetMyTransactions)
+		transactionRoutes.GET("/user-transactions", AuthorizationMiddleware(h), h.GetTransactions)
+	}
 
 	r.Run(":8080")
 }

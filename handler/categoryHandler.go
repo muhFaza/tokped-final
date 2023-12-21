@@ -62,6 +62,34 @@ func (h *Handler) GetCategories(c *gin.Context) {
     c.JSON(http.StatusOK, response)
 }
 
+func (h *Handler) UpdateCategory(c *gin.Context) {
+	id := c.Param("id")
+	var category model.Category
+	result := h.DB.Where("id = ?", id).First(&category)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	var newCategory model.Category
+	if err := c.ShouldBindJSON(&newCategory); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// replace the old category type with the new one
+	category.Type = newCategory.Type
+
+	result = h.DB.Model(&category).Updates(category)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"id": category.ID, "type": category.Type, "sold_product_amount": category.SoldProductAmount, "created_at": category.CreatedAt})
+
+}
+
 func (h *Handler) DeleteCategory(c *gin.Context) {
 	id := c.Param("id")
 	var category model.Category

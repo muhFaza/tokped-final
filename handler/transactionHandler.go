@@ -5,8 +5,6 @@ import (
 	"tokped-final/model"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
-	"gorm.io/gorm"
 )
 
 func (h *Handler) CreateTransaction(c *gin.Context) {
@@ -27,12 +25,6 @@ func (h *Handler) CreateTransaction(c *gin.Context) {
 	}
 
 	transaction.TotalPrice = product.Price * transaction.Quantity
-
-	validate := validator.New()
-	if err := validate.Struct(transaction); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
 
 	// check if user has enough balance
 	if user.Balance < transaction.TotalPrice {
@@ -66,10 +58,67 @@ func (h *Handler) CreateTransaction(c *gin.Context) {
 		return
 	}
 
+	// update sold product amount in category
+	var category model.Category
+	if err := h.DB.First(&category, product.CategoryID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	category.SoldProductAmount += transaction.Quantity
+	if err := h.DB.Save(&category).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{"message": "You have successfully purchased the product",
 		"transaction_bill": gin.H{
 			"total_price":   transaction.TotalPrice,
 			"quantity":      transaction.Quantity,
 			"product_title": product.Title,
 		}})
+}
+
+type GetMyTransactionsResponse struct {
+	ID         uint
+	ProductID  int
+	Product    model.Product
+	UserID     int
+	Quantity   int
+	TotalPrice int
+}
+
+func (h *Handler) GetMyTransactions(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+
+	var transactions []model.TransactionHistory
+	result := h.DB.Preload("Product").Where("user_id = ?", user.ID).Find(&transactions)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	var response []GetMyTransactionsResponse
+	for _, transaction := range transactions {
+		response = append(response, GetMyTransactionsResponse{
+			ID:         transaction.ID,
+			ProductID:  transaction.ProductID,
+			Product:    transaction.Product,
+			Quantity:   transaction.Quantity,
+			TotalPrice: transaction.TotalPrice,
+			UserID:     transaction.UserID,
+		})
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *Handler) GetTransactions(c *gin.Context) {
+	var transactions []model.TransactionHistory
+	result := h.DB.Preload("Product").Preload("User").Find(&transactions)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, transactions)
 }
