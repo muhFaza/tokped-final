@@ -7,10 +7,10 @@ import (
 type User struct {
 	gorm.Model
 	Email string `gorm:"unique;not null" validate:"required,email"`
-	Fullname string `gorm:"not null" validate:"required"`
+	Fullname string `gorm:"not null;column:full_name" validate:"required"`
 	Password string `gorm:"not null" validate:"required,min=6"`
-	Role string `gorm:"not null" validate:"required,oneof=admin customer"`
-	Balance int `gorm:"not null" validate:"required,min=0,max=100000000"`
+	Role string `gorm:"not null;default:customer"`
+	Balance int `gorm:"not null;default:0"`
 }
 
 type Category struct {
