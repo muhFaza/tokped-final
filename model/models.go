@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+
 	"gorm.io/gorm"
 )
 
@@ -41,4 +43,16 @@ type TransactionHistory struct {
 type LoginRequest struct {
 	Email    string `validate:"required,email"`
 	Password string `validate:"required"`
+}
+
+type TopUpRequest struct {
+	Balance int `validate:"required,max=100000000"`
+}
+
+func (u *User) BeforeSave(tx *gorm.DB) (err error) {
+	if u.Balance > 100000000 {
+		err = errors.New("Balance cannot be more than Rp. 100,000,000")
+		return
+	}
+	return
 }

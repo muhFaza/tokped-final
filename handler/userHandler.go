@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"tokped-final/helper"
 	"tokped-final/model"
@@ -81,4 +82,30 @@ func (h *Handler) Login(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"token": token})
+}
+
+func (h *Handler) TopUp(c *gin.Context) {
+	user := c.MustGet("user").(*model.User)
+	topUpRequest := &model.TopUpRequest{}
+	if err := c.ShouldBindJSON(topUpRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	validate := validator.New()
+	if err := validate.Struct(topUpRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	user.Balance += topUpRequest.Balance
+	result := h.DB.Save(user)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+
+	res := fmt.Sprintf("Your balance has been successfully updated to %s", helper.FormatIDR(user.Balance))
+
+	c.JSON(http.StatusOK, gin.H{"message": res})
 }
