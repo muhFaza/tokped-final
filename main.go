@@ -2,6 +2,7 @@ package main
 
 import (
 	"tokped-final/config"
+	"tokped-final/handler"
 	"tokped-final/model"
 
 	"github.com/gin-gonic/gin"
@@ -10,15 +11,12 @@ import (
 )
 
 func main() {
-	_ = initDB()
+	db := initDB()
+	h := &handler.Handler{DB: db}
 
 	r := gin.Default()
 
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Pong!",
-		})
-	})
+	r.POST("/users/register", h.Register)
 
 	r.Run(":8080")
 }
