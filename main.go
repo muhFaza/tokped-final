@@ -21,8 +21,25 @@ func main() {
 	// uses bcrypt for password hashing
 	r.POST("/users/register", h.Register)
 	r.POST("/users/login", h.Login)
-
 	r.PATCH("/users/topup", AuthMiddleware(h), h.TopUp)
+
+	categories := r.Group("/categories")
+	categories.Use(AuthMiddleware(h), AuthorizationMiddleware(h))
+	{
+		categories.POST("", h.CreateCategory)
+		categories.GET("", h.GetCategories)
+		categories.DELETE("/:id", h.DeleteCategory)
+	}
+
+	products := r.Group("/products")
+	products.Use(AuthMiddleware(h), AuthorizationMiddleware(h))
+	{
+		products.POST("", h.CreateProduct)
+		products.PUT("/:id", h.UpdateProduct)
+		products.DELETE("/:id", h.DeleteProduct)
+	}
+
+	r.GET("/products", h.GetProducts)
 
 	r.Run(":8080")
 }
@@ -52,6 +69,18 @@ func AuthMiddleware(h *handler.Handler) gin.HandlerFunc {
 		}
 
 		c.Set("user", user)
+		c.Next()
+	}
+}
+
+func AuthorizationMiddleware(h *handler.Handler) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := c.MustGet("user").(*model.User)
+		if user.Role != "admin" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
 		c.Next()
 	}
 }

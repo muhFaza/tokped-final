@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -19,15 +20,15 @@ type Category struct {
 	gorm.Model
 	Type              string `gorm:"unique;not null" validate:"required"`
 	SoldProductAmount int    `gorm:"column:sold_product_amount;default:0"`
+	Products          []Product
 }
 
 type Product struct {
 	gorm.Model
-	Title      string `gorm:"not null" validate:"required"`
-	Price      int    `gorm:"not null" validate:"required,min=5"`
-	Stock      int    `gorm:"not null" validate:"required,min=0,max=50000000"`
-	CategoryID int
-	Category   Category `gorm:"foreignKey:CategoryID"`
+	Title string `gorm:"not null" validate:"required"`
+	Price      int      `gorm:"not null" validate:"required,min=0,max=50000000"`
+	Stock      int      `gorm:"not null" validate:"required,min=5"`
+	CategoryID int      `gorm:"not null"`
 }
 
 type TransactionHistory struct {
@@ -47,6 +48,15 @@ type LoginRequest struct {
 
 type TopUpRequest struct {
 	Balance int `validate:"required,max=100000000"`
+}
+
+type CategoryResponse struct {
+	ID                uint
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Type              string
+	SoldProductAmount int
+	Products          []Product
 }
 
 func (u *User) BeforeSave(tx *gorm.DB) (err error) {
